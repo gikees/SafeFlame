@@ -216,7 +216,14 @@
 
   .alert-msg { flex: 1; }
 
-  /* Hints panel */
+  .alert-advice {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--blue);
+    font-style: italic;
+  }
+
+  /* LLM Suggestions panel */
   .suggestion-log {
     max-height: 300px;
     overflow-y: auto;
@@ -357,9 +364,9 @@
     </div>
 
     <div class="panel">
-      <h2>Hints</h2>
+      <h2>LLM Suggestions</h2>
       <div id="suggestionLog" class="suggestion-log">
-        <div class="no-zones">No hints yet.</div>
+        <div class="no-zones">No suggestions yet.</div>
       </div>
     </div>
   </div>
@@ -404,8 +411,6 @@ connectVideo();
 let wsAlerts = null;
 const alertEntries = [];
 const suggestionEntries = [];
-const seenHintTypes = new Set();
-let lastPersonPresent = null;
 function connectAlerts() {
   wsAlerts = new WebSocket(`ws://${WS_HOST}/ws/alerts`);
   wsAlerts.onmessage = (e) => {
@@ -421,8 +426,7 @@ function addAlertEntry(alert) {
   alertEntries.unshift(alert);
   if (alertEntries.length > 50) alertEntries.pop();
   renderAlerts();
-  if (alert.advice && alert.type && !seenHintTypes.has(alert.type)) {
-    seenHintTypes.add(alert.type);
+  if (alert.advice) {
     suggestionEntries.unshift(alert);
     if (suggestionEntries.length > 20) suggestionEntries.pop();
     renderSuggestions();
@@ -432,7 +436,9 @@ function addAlertEntry(alert) {
 
 function speakAlert(alert) {
   if (!('speechSynthesis' in window)) return;
-  const utter = new SpeechSynthesisUtterance(alert.message);
+  let text = alert.message;
+  if (alert.advice) text += '. ' + alert.advice;
+  const utter = new SpeechSynthesisUtterance(text);
   utter.rate = 1.1;
   if (alert.severity === 'critical') { utter.rate = 1.2; utter.volume = 1.0; }
   else if (alert.severity === 'warning') { utter.volume = 0.9; }
@@ -448,10 +454,11 @@ function renderAlerts() {
   }
   container.innerHTML = alertEntries.map(a => {
     const time = new Date(a.timestamp * 1000).toLocaleTimeString();
+    const adviceHtml = a.advice ? `<div class="alert-advice">${escapeHtml(a.advice)}</div>` : '';
     return `<div class="alert-entry">
       <span class="alert-time">${time}</span>
       <span class="alert-badge ${a.severity}">${a.severity}</span>
-      <span class="alert-msg">${escapeHtml(a.message)}</span>
+      <span class="alert-msg">${escapeHtml(a.message)}${adviceHtml}</span>
     </div>`;
   }).join('');
 }
@@ -459,7 +466,7 @@ function renderAlerts() {
 function renderSuggestions() {
   const container = document.getElementById('suggestionLog');
   if (suggestionEntries.length === 0) {
-    container.innerHTML = '<div class="no-zones">No hints yet.</div>';
+    container.innerHTML = '<div class="no-zones">No suggestions yet.</div>';
     return;
   }
   container.innerHTML = suggestionEntries.map(a => {
@@ -495,15 +502,11 @@ async function pollStatus() {
     if (data.person_present) {
       dot.classList.add('present');
       label.textContent = 'Person present';
-      if (lastPersonPresent === false) {
-        seenHintTypes.clear();
-      }
     } else {
       dot.classList.remove('present');
       const secs = data.person_absent_seconds ? Math.round(data.person_absent_seconds) : 0;
       label.textContent = secs > 0 ? `Absent ${secs}s` : 'No person';
     }
-    lastPersonPresent = data.person_present;
     // Zones
     zoneOverrides = data.zone_overrides || {};
     renderZoneStatus(data.zones || {});
