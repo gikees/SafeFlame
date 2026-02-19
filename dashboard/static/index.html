@@ -346,6 +346,17 @@ function addAlertEntry(alert) {
   alertEntries.unshift(alert);
   if (alertEntries.length > 50) alertEntries.pop();
   renderAlerts();
+  speakAlert(alert);
+}
+
+function speakAlert(alert) {
+  if (!('speechSynthesis' in window)) return;
+  const utter = new SpeechSynthesisUtterance(alert.message);
+  utter.rate = 1.1;
+  if (alert.severity === 'critical') { utter.rate = 1.2; utter.volume = 1.0; }
+  else if (alert.severity === 'warning') { utter.volume = 0.9; }
+  else { utter.volume = 0.7; }
+  speechSynthesis.speak(utter);
 }
 
 function renderAlerts() {
