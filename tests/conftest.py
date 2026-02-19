@@ -54,7 +54,7 @@ def _reset_config():
         "sink", "refrigerator", "cell phone",
     ]
     config.LLM_TIMEOUT_SECONDS = 3.0
-    config.OLLAMA_MODEL = "llama3"
+    config.OLLAMA_MODEL = "llama3.2:3b"
     yield
 
 

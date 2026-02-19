@@ -36,6 +36,7 @@ def parse_args():
     parser.add_argument("--no-tts", action="store_true", help="Disable voice alerts")
     parser.add_argument("--no-llm", action="store_true", help="Disable LLM advisor")
     parser.add_argument("--port", type=int, default=None, help="Dashboard port (overrides config)")
+    parser.add_argument("--demo", action="store_true", help="Demo mode: shorter escalation timers")
     return parser.parse_args()
 
 
@@ -53,6 +54,12 @@ class SafeFlame:
             config.CAMERA_INDEX = args.camera
         if args.port:
             config.DASHBOARD_PORT = args.port
+        if args.demo:
+            config.UNATTENDED_INFO_SECONDS = 10
+            config.UNATTENDED_WARNING_SECONDS = 30
+            config.UNATTENDED_CRITICAL_SECONDS = 60
+            config.ALERT_COOLDOWN_SECONDS = 10
+            config.SMOKE_PERSISTENCE_SECONDS = 1.5
 
         # Initialize components
         print("[SafeFlame] Initializing detector...")

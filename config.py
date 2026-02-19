@@ -69,5 +69,5 @@ JPEG_QUALITY = 70  # 0-100, lower = smaller frames over WebSocket
 
 # ── LLM (Ollama) ─────────────────────────────────────────────────────────────
 OLLAMA_URL = "http://localhost:11434"
-OLLAMA_MODEL = "llama3"
+OLLAMA_MODEL = "llama3.2:3b"
 LLM_TIMEOUT_SECONDS = 3.0
