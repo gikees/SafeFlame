@@ -50,7 +50,6 @@ def _reset_config():
     config.TTS_VOLUME_INFO = 0.7
     config.TTS_VOLUME_WARNING = 0.9
     config.TTS_VOLUME_CRITICAL = 1.0
-    config.YOLO_MODEL = "yolov8s.pt"
     config.YOLO_CONFIDENCE = 0.4
     config.YOLO_CLASSES_OF_INTEREST = [
         "person", "oven", "microwave", "toaster", "knife",

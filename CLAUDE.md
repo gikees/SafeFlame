@@ -26,7 +26,7 @@ Real-time AI kitchen safety monitor. Camera feed → YOLOv8 + CV heuristics → 
 
 ```
 main.py (SafeFlame class)
-├── detector.py        — YOLOv8 wrapper (ultralytics, yolov8s.pt). detect() → list[dict], draw() → annotated frame
+├── detector.py        — YOLOv8 wrapper (ultralytics). detect() → list[dict], draw() → annotated frame
 ├── heuristics.py      — HeuristicDetector: flame (HSV), smoke (HSV + persistence), boilover (motion/edge), proximity
 ├── state_machine.py   — KitchenStateMachine: per-zone BurnerState enum, escalation timers, alert dedup via cooldowns
 ├── alerts.py          — AlertManager: pyttsx3 TTS in background threads, system fallback (say/espeak), log capped at 100
