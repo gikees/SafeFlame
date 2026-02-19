@@ -26,6 +26,7 @@ class TestDemoFlag:
         assert config.SMOKE_PERSISTENCE_SECONDS == 1.5
         assert config.ASSUME_BURNERS_ACTIVE is True
         assert config.SMOKE_DETECTION_ENABLED is False
+        assert config.BOILOVER_DETECTION_ENABLED is False
 
     def test_no_demo_keeps_defaults(self):
         with patch("sys.argv", ["main.py", "--no-display", "--no-tts", "--no-llm"]):
@@ -44,3 +45,4 @@ class TestDemoFlag:
         assert config.SMOKE_PERSISTENCE_SECONDS == 3.0
         assert config.ASSUME_BURNERS_ACTIVE is False
         assert config.SMOKE_DETECTION_ENABLED is True
+        assert config.BOILOVER_DETECTION_ENABLED is True

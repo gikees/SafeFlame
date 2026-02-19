@@ -62,6 +62,7 @@ class SafeFlame:
             config.SMOKE_PERSISTENCE_SECONDS = 1.5
             config.ASSUME_BURNERS_ACTIVE = True
             config.SMOKE_DETECTION_ENABLED = False
+            config.BOILOVER_DETECTION_ENABLED = False
 
         # Initialize components
         print("[SafeFlame] Initializing detector...")

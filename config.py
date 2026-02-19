@@ -38,6 +38,7 @@ SMOKE_PERSISTENCE_SECONDS = 3.0  # must persist this long to count as smoke (not
 BOILOVER_EDGE_THRESHOLD = 80
 BOILOVER_MOTION_THRESHOLD = 30
 BOILOVER_MIN_AREA = 1000
+BOILOVER_DETECTION_ENABLED = True
 
 # ── Proximity Detection ──────────────────────────────────────────────────────
 PROXIMITY_DISTANCE_PX = 150  # pixel distance threshold
