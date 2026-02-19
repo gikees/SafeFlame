@@ -47,6 +47,7 @@ class KitchenStateMachine:
         # Per-zone state
         self.zone_states: dict[str, BurnerState] = {}
         self.zone_unattended_since: dict[str, float | None] = {}
+        self.zone_active_overrides: dict[str, bool] = {}
 
         # Person tracking
         self.person_present: bool = False
@@ -90,7 +91,12 @@ class KitchenStateMachine:
 
         for zone in burner_zones:
             name = zone["name"]
-            flame_on = config.ASSUME_BURNERS_ACTIVE or zone_flame_status.get(name, False)
+            if name in self.zone_active_overrides:
+                flame_on = self.zone_active_overrides[name]
+            elif config.ASSUME_BURNERS_ACTIVE:
+                flame_on = True
+            else:
+                flame_on = zone_flame_status.get(name, False)
 
             # Initialize zone state if new
             if name not in self.zone_states:

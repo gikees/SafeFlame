@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import config
+from state_machine import BurnerState
 
 app = FastAPI(title="SafeFlame Dashboard")
 
@@ -62,6 +63,7 @@ async def get_status():
         return {"person_present": False, "zones": {}}
     return {
         **sm.get_status(config.BURNER_ZONES),
+        "zone_overrides": sm.zone_active_overrides,
         "fps": _shared.get("fps", 0),
         "inference_ms": _shared.get("inference_ms", 0),
     }
@@ -92,6 +94,20 @@ class ZoneConfig(BaseModel):
 async def set_zones(zones: list[ZoneConfig]):
     config.BURNER_ZONES = [z.model_dump() for z in zones]
     return {"status": "ok", "zones": config.BURNER_ZONES}
+
+
+@app.post("/api/zones/{zone_name}/toggle")
+async def toggle_zone(zone_name: str):
+    sm = _shared.get("state_machine")
+    if sm is None:
+        return {"status": "error", "message": "State machine not initialized"}
+    current = sm.zone_active_overrides.get(zone_name, False)
+    sm.zone_active_overrides[zone_name] = not current
+    # Reset escalation timer when toggling off
+    if not sm.zone_active_overrides[zone_name]:
+        sm.zone_states[zone_name] = BurnerState.OFF
+        sm.zone_unattended_since[zone_name] = None
+    return {"status": "ok", "zone": zone_name, "active": sm.zone_active_overrides[zone_name]}
 
 
 class ConfigUpdate(BaseModel):

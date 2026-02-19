@@ -154,6 +154,28 @@
     color: var(--text-dim);
   }
 
+  .zone-card .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle-btn {
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .toggle-btn:hover { background: var(--border); }
+  .toggle-btn.active { background: var(--green); color: #000; border-color: var(--green); }
+  .toggle-btn.inactive { background: var(--surface); }
+
   /* Alert log */
   .alert-log {
     max-height: 300px;
@@ -401,10 +423,13 @@ async function pollStatus() {
       label.textContent = secs > 0 ? `Absent ${secs}s` : 'No person';
     }
     // Zones
+    zoneOverrides = data.zone_overrides || {};
     renderZoneStatus(data.zones || {});
   } catch (e) {}
 }
 setInterval(pollStatus, 1000);
+
+let zoneOverrides = {};
 
 function renderZoneStatus(zones) {
   const container = document.getElementById('zonesContainer');
@@ -413,17 +438,30 @@ function renderZoneStatus(zones) {
     container.innerHTML = '<div class="no-zones">No zones configured.<br>Use the controls below to add zones.</div>';
     return;
   }
-  // Merge: show configured zones with their status
   const allNames = [...new Set([...zoneNames, ...currentZones.map(z => z.name)])];
   container.innerHTML = allNames.map(name => {
     const status = zones[name] || { state: 'off', unattended_seconds: null };
     const stateLabel = status.state.replace(/_/g, ' ');
     const unsec = status.unattended_seconds ? ` (${Math.round(status.unattended_seconds)}s)` : '';
+    const isOn = zoneOverrides[name] || false;
+    const btnClass = isOn ? 'active' : 'inactive';
+    const btnLabel = isOn ? 'ON' : 'OFF';
     return `<div class="zone-card ${status.state}">
       <span>${name}</span>
-      <span class="state">${stateLabel}${unsec}</span>
+      <div class="controls">
+        <span class="state">${stateLabel}${unsec}</span>
+        <button class="toggle-btn ${btnClass}" onclick="toggleZone('${name}')">${btnLabel}</button>
+      </div>
     </div>`;
   }).join('');
+}
+
+async function toggleZone(name) {
+  try {
+    const res = await fetch(`/api/zones/${encodeURIComponent(name)}/toggle`, { method: 'POST' });
+    const data = await res.json();
+    zoneOverrides[name] = data.active;
+  } catch (e) {}
 }
 
 // ── Zone Drawing ───────────────────────────────────────────────
