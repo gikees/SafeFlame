@@ -18,6 +18,10 @@ YOLO_CLASSES_OF_INTEREST = [
     "person", "oven", "microwave", "toaster", "knife",
     "cup", "bowl", "bottle", "fork", "spoon",
     "sink", "refrigerator", "cell phone",
+    "backpack", "handbag", "tie", "umbrella", "suitcase",
+    "wine glass", "scissors", "teddy bear",
+    "laptop", "remote", "keyboard", "mouse",
+    "potted plant", "vase", "hair drier",
 ]
 
 # ── Flame Detection (HSV thresholds) ─────────────────────────────────────────
@@ -42,7 +46,13 @@ BOILOVER_DETECTION_ENABLED = True
 
 # ── Proximity Detection ──────────────────────────────────────────────────────
 PROXIMITY_DISTANCE_PX = 150  # pixel distance threshold
-FLAMMABLE_OBJECTS = ["bottle", "cup", "cell phone", "book", "paper"]
+FLAMMABLE_OBJECTS = [
+    "bottle", "cup", "cell phone", "book", "paper",
+    "backpack", "handbag", "tie", "umbrella", "suitcase",
+    "wine glass", "teddy bear", "laptop", "remote",
+    "keyboard", "mouse", "hair drier", "scissors",
+    "potted plant", "vase",
+]
 
 # ── Burner Zones ──────────────────────────────────────────────────────────────
 # List of dicts: {"name": str, "x": int, "y": int, "w": int, "h": int}
