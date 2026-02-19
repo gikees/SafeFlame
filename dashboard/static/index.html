@@ -223,6 +223,49 @@
     font-style: italic;
   }
 
+  /* LLM Suggestions panel */
+  .suggestion-log {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .suggestion-entry {
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.03);
+    border-left: 4px solid var(--blue);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .suggestion-entry.info { border-left-color: var(--yellow); }
+  .suggestion-entry.warning { border-left-color: var(--orange); }
+  .suggestion-entry.critical { border-left-color: var(--red); }
+
+  .suggestion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+  }
+
+  .suggestion-header .alert-time { width: auto; }
+
+  .suggestion-context {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+
+  .suggestion-text {
+    color: var(--blue);
+    font-size: 0.9rem;
+  }
+
   /* Zone setup */
   .zone-setup {
     display: flex;
@@ -319,6 +362,13 @@
         <div class="no-zones">No alerts yet.</div>
       </div>
     </div>
+
+    <div class="panel">
+      <h2>LLM Suggestions</h2>
+      <div id="suggestionLog" class="suggestion-log">
+        <div class="no-zones">No suggestions yet.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -360,6 +410,7 @@ connectVideo();
 // ── WebSocket: Alerts ──────────────────────────────────────────
 let wsAlerts = null;
 const alertEntries = [];
+const suggestionEntries = [];
 function connectAlerts() {
   wsAlerts = new WebSocket(`ws://${WS_HOST}/ws/alerts`);
   wsAlerts.onmessage = (e) => {
@@ -375,6 +426,11 @@ function addAlertEntry(alert) {
   alertEntries.unshift(alert);
   if (alertEntries.length > 50) alertEntries.pop();
   renderAlerts();
+  if (alert.advice) {
+    suggestionEntries.unshift(alert);
+    if (suggestionEntries.length > 20) suggestionEntries.pop();
+    renderSuggestions();
+  }
   speakAlert(alert);
 }
 
@@ -403,6 +459,25 @@ function renderAlerts() {
       <span class="alert-time">${time}</span>
       <span class="alert-badge ${a.severity}">${a.severity}</span>
       <span class="alert-msg">${escapeHtml(a.message)}${adviceHtml}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderSuggestions() {
+  const container = document.getElementById('suggestionLog');
+  if (suggestionEntries.length === 0) {
+    container.innerHTML = '<div class="no-zones">No suggestions yet.</div>';
+    return;
+  }
+  container.innerHTML = suggestionEntries.map(a => {
+    const time = new Date(a.timestamp * 1000).toLocaleTimeString();
+    return `<div class="suggestion-entry ${a.severity}">
+      <div class="suggestion-header">
+        <span class="alert-time">${time}</span>
+        <span class="alert-badge ${a.severity}">${a.severity}</span>
+      </div>
+      <div class="suggestion-context">${escapeHtml(a.message)}</div>
+      <div class="suggestion-text">${escapeHtml(a.advice)}</div>
     </div>`;
   }).join('');
 }
