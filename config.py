@@ -9,7 +9,7 @@ FRAME_HEIGHT = 720
 
 # ── YOLO Model ────────────────────────────────────────────────────────────────
 # Swap to "yolov8s.pt", "yolov8m.pt", or a custom fine-tuned ".pt" path anytime.
-YOLO_MODEL = "yolov8n.pt"
+YOLO_MODEL = "yolov8s.pt"
 YOLO_CONFIDENCE = 0.4
 YOLO_DEVICE = None  # None = auto-detect (GPU if available), or "cpu", "cuda:0"
 
