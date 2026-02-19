@@ -26,7 +26,7 @@ Real-time AI kitchen safety monitor. Camera feed → YOLOv8 + CV heuristics → 
 
 ```
 main.py (SafeFlame class)
-├── detector.py        — YOLOv8 wrapper (ultralytics). detect() → list[dict], draw() → annotated frame
+├── detector.py        — YOLOv8 wrapper (ultralytics, yolov8s.pt). detect() → list[dict], draw() → annotated frame
 ├── heuristics.py      — HeuristicDetector: flame (HSV), smoke (HSV + persistence), boilover (motion/edge), proximity
 ├── state_machine.py   — KitchenStateMachine: per-zone BurnerState enum, escalation timers, alert dedup via cooldowns
 ├── alerts.py          — AlertManager: pyttsx3 TTS in background threads, system fallback (say/espeak), log capped at 100
@@ -69,3 +69,7 @@ On systems with externally-managed Python (Debian/Ubuntu), use a venv:
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+## GPU / CUDA note
+
+The Dell GB10 has NVIDIA compute capability 12.1. Current PyTorch CUDA builds (e.g. `torch+cu128`) only officially support up to 12.0. Installing CUDA-enabled PyTorch causes the dashboard video stream to break (frames stop flowing over WebSocket). **Keep PyTorch CPU-only** (`pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu`) until PyTorch adds official support for compute capability 12.1.
