@@ -72,4 +72,13 @@ pip install -r requirements.txt
 
 ## GPU / CUDA note
 
-The Dell GB10 has NVIDIA compute capability 12.1. Current PyTorch CUDA builds (e.g. `torch+cu128`) only officially support up to 12.0. Installing CUDA-enabled PyTorch causes the dashboard video stream to break (frames stop flowing over WebSocket). **Keep PyTorch CPU-only** (`pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu`) until PyTorch adds official support for compute capability 12.1.
+The Dell GB10 has NVIDIA compute capability 12.1 (Blackwell, ARM64). PyTorch cu130 (`torch 2.10.0+cu130`) detects the GPU and CUDA works via sm_120 binary compatibility, but **the dashboard WebSocket video stream stalls** when CUDA is active. Root cause: CUDA's `cudaMallocAsync` triggers GIL-blocking synchronization that starves the uvicorn event loop thread.
+
+**Tested (Feb 2026):**
+- `pip install --force-reinstall torch torchvision --index-url https://download.pytorch.org/whl/cu130` — CUDA detected, YOLO runs on GPU, but dashboard video freezes/staggers even with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
+- **Keep PyTorch CPU-only** for now: `pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu`
+
+**Future fix options:**
+- Move YOLO inference to a separate process (multiprocessing) to isolate CUDA GIL contention from uvicorn
+- Try NVIDIA NGC container (`nvcr.io/nvidia/pytorch:25.12-py3`) which may have better allocator defaults
+- Wait for PyTorch 2.11+ which targets native sm_121 support
