@@ -2,9 +2,11 @@
 
 Real-time AI kitchen safety monitor that detects hazards and alerts you before accidents happen.
 
+Built at a 12-hour NYU hackathon. All inference runs locally — no cloud.
+
 ## Overview
 
-SafeFlame watches a kitchen camera feed and combines YOLOv8 object detection with computer-vision heuristics (flame, smoke, boil-over, proximity) to track burner state in real time. A state machine escalates unattended-burner alerts through INFO → WARNING → CRITICAL severity levels. Voice alerts notify you immediately, a local LLM (Ollama) provides one-sentence safety advice, and a live web dashboard lets you monitor everything from another device.
+SafeFlame watches a kitchen camera feed and combines YOLOv8 object detection with computer-vision heuristics (flame, smoke, boil-over, proximity) to track burner state in real time. A state machine escalates unattended-burner alerts through INFO → WARNING → CRITICAL severity levels. Voice alerts notify you immediately, a local LLM (Ollama llama3.1:8b) provides one-sentence safety advice, and a live web dashboard lets you monitor everything from another device.
 
 ## Architecture
 
@@ -72,7 +74,7 @@ pip install -r requirements.txt
 If using LLM advice, pull a model:
 
 ```bash
-ollama pull llama3
+ollama pull llama3.1:8b
 ```
 
 ### Configuration
@@ -86,7 +88,7 @@ All thresholds, timers, and settings live in `config.py`. Key settings:
 | `DASHBOARD_PORT` | `8000` | Web dashboard port |
 | `UNATTENDED_WARNING_SECONDS` | `180` | Seconds before WARNING escalation |
 | `UNATTENDED_CRITICAL_SECONDS` | `300` | Seconds before CRITICAL escalation |
-| `OLLAMA_MODEL` | `llama3` | Ollama model for safety advice |
+| `OLLAMA_MODEL` | `llama3.1:8b` | Ollama model for safety advice |
 
 ## Usage
 
@@ -104,6 +106,7 @@ python main.py
 | `--no-tts` | Disable voice alerts |
 | `--no-llm` | Disable LLM advisor |
 | `--port PORT` | Override dashboard port |
+| `--demo` | Demo mode — shorter escalation timers (10s/30s/60s) |
 
 ### Examples
 
@@ -113,6 +116,9 @@ python main.py --video demo_kitchen.mp4 --no-tts
 
 # Headless mode on camera 1, dashboard on port 9000
 python main.py --camera 1 --no-display --port 9000
+
+# Demo mode with fast escalation timers
+python main.py --video demo_kitchen.mp4 --demo
 ```
 
 ### Dashboard
@@ -143,7 +149,7 @@ Each zone is a dict with `name`, `x`, `y`, `w`, `h` (pixel coordinates).
 ## Testing
 
 ```bash
-python -m pytest tests/ -v
+python -m pytest tests/ -v   # 82 tests, ~1s
 ```
 
 ## Project Structure
@@ -162,7 +168,8 @@ SafeFlame/
 │   └── static/
 │       └── index.html   # Dashboard frontend
 ├── tests/
-│   ├── conftest.py      # Shared fixtures
+│   ├── conftest.py      # Shared fixtures and mocks
+│   ├── test_main.py
 │   ├── test_detector.py
 │   ├── test_heuristics.py
 │   ├── test_state_machine.py
