@@ -2,15 +2,12 @@
 
 Real-time AI kitchen safety monitor. Camera feed → YOLOv8 + CV heuristics → state machine → voice alerts + LLM advice + web dashboard.
 
-**Hackathon project** (12-hour NYU hackathon). All inference runs locally on a Dell Pro Max with NVIDIA GB10 — no cloud.
+All inference runs locally — no cloud.
 
 ## Workflow
 
-- **Develop locally** → push to GitHub → pull on remote GB10 → run there
-- **Remote machine**: `dell@100.89.249.36` (GPU inference, no camera, Ollama with llama3.1:8b)
-  - SSH via `sshpass -p <password> ssh dell@100.89.249.36` (password stored locally, not in repo)
-  - Working directory on remote: `~/SafeFlame` with venv at `.venv`
-- **Dashboard access**: `http://100.89.249.36:8000` from any machine on the network
+- **Run**: `python main.py` (requires camera or `--video PATH`)
+- **Dashboard**: open `http://localhost:8000` in a browser
 - For demo without a live camera, use `--video PATH` with a pre-recorded clip
 
 ## Quick reference
@@ -72,13 +69,8 @@ pip install -r requirements.txt
 
 ## GPU / CUDA note
 
-The Dell GB10 has NVIDIA compute capability 12.1 (Blackwell, ARM64). PyTorch cu130 (`torch 2.10.0+cu130`) detects the GPU and CUDA works via sm_120 binary compatibility, but **the dashboard WebSocket video stream stalls** when CUDA is active. Root cause: CUDA's `cudaMallocAsync` triggers GIL-blocking synchronization that starves the uvicorn event loop thread.
+When using CUDA-enabled PyTorch, the dashboard WebSocket video stream may stall due to `cudaMallocAsync` GIL contention starving the uvicorn event loop. **Keep PyTorch CPU-only** unless you isolate YOLO inference in a separate process:
 
-**Tested (Feb 2026):**
-- `pip install --force-reinstall torch torchvision --index-url https://download.pytorch.org/whl/cu130` — CUDA detected, YOLO runs on GPU, but dashboard video freezes/staggers even with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
-- **Keep PyTorch CPU-only** for now: `pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu`
-
-**Future fix options:**
-- Move YOLO inference to a separate process (multiprocessing) to isolate CUDA GIL contention from uvicorn
-- Try NVIDIA NGC container (`nvcr.io/nvidia/pytorch:25.12-py3`) which may have better allocator defaults
-- Wait for PyTorch 2.11+ which targets native sm_121 support
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+```

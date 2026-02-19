@@ -2,7 +2,7 @@
 
 Real-time AI kitchen safety monitor that detects hazards and alerts you before accidents happen.
 
-Built at a 12-hour NYU hackathon. All inference runs locally — no cloud.
+All inference runs locally — no cloud.
 
 ## Overview
 
