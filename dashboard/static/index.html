@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeFlame - Kitchen Safety Monitor</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --orange: #db6d28;
+    --red: #f85149;
+    --blue: #58a6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  header .stats {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+  }
+
+  header .stats span { font-weight: 600; color: var(--text); }
+
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    padding: 16px;
+    height: calc(100vh - 56px);
+  }
+
+  .video-container {
+    position: relative;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #videoCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .video-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .person-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,0,0,0.7);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+  }
+
+  .person-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+
+  .person-dot.present { background: var(--green); }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .panel h2 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Burner zone cards */
+  .zones-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .zone-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border-left: 4px solid var(--green);
+    background: rgba(63,185,80,0.1);
+    font-size: 0.95rem;
+  }
+
+  .zone-card.off { border-color: var(--text-dim); background: rgba(139,148,158,0.1); }
+  .zone-card.active_attended { border-color: var(--green); background: rgba(63,185,80,0.1); }
+  .zone-card.active_unattended { border-color: var(--yellow); background: rgba(210,153,34,0.1); }
+  .zone-card.alert_info { border-color: var(--yellow); background: rgba(210,153,34,0.15); }
+  .zone-card.alert_warning { border-color: var(--orange); background: rgba(219,109,40,0.15); }
+  .zone-card.alert_critical { border-color: var(--red); background: rgba(248,81,73,0.2); }
+
+  .zone-card .state {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+
+  /* Alert log */
+  .alert-log {
+    max-height: 300px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .alert-entry {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .alert-badge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .alert-badge.info { background: var(--yellow); color: #000; }
+  .alert-badge.warning { background: var(--orange); color: #000; }
+  .alert-badge.critical { background: var(--red); color: #fff; }
+
+  .alert-time {
+    color: var(--text-dim);
+    flex-shrink: 0;
+    width: 55px;
+  }
+
+  .alert-msg { flex: 1; }
+
+  /* Zone setup */
+  .zone-setup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .zone-setup input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .btn:hover { background: var(--border); }
+  .btn-primary { background: var(--blue); border-color: var(--blue); color: #000; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+
+  .no-zones {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 12px;
+  }
+
+  #drawingHint {
+    color: var(--yellow);
+    font-size: 0.8rem;
+    text-align: center;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SafeFlame</h1>
+  <div class="stats">
+    FPS: <span id="fpsVal">0</span>
+    &nbsp;|&nbsp;
+    Inference: <span id="inferenceVal">0</span>ms
+  </div>
+</header>
+
+<div class="main">
+  <div class="video-container" id="videoContainer">
+    <canvas id="videoCanvas"></canvas>
+    <div class="video-overlay">
+      <div class="person-indicator">
+        <div class="person-dot" id="personDot"></div>
+        <span id="personLabel">No person</span>
+      </div>
+    </div>
+    <div id="drawingHint" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%)">
+      Click and drag to define a burner zone
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel">
+      <h2>Burner Zones</h2>
+      <div id="zonesContainer" class="zones-grid">
+        <div class="no-zones">No zones configured.<br>Use the controls below to add zones.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Zone Setup</h2>
+      <div class="zone-setup">
+        <input type="text" id="zoneName" placeholder="Zone name (e.g., Front Left)" />
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="btnDrawZone">Draw Zone on Feed</button>
+          <button class="btn btn-danger" id="btnClearZones">Clear All</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Alert Log</h2>
+      <div id="alertLog" class="alert-log">
+        <div class="no-zones">No alerts yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WS_HOST = window.location.host;
+const canvas = document.getElementById('videoCanvas');
+const ctx = canvas.getContext('2d');
+const img = new Image();
+
+// ── WebSocket: Video Feed ──────────────────────────────────────
+let wsVideo = null;
+function connectVideo() {
+  wsVideo = new WebSocket(`ws://${WS_HOST}/ws`);
+  wsVideo.onmessage = (e) => {
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      // Draw zone rectangles being drawn
+      if (drawing && drawStart && drawEnd) {
+        ctx.strokeStyle = '#58a6ff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        const x = Math.min(drawStart.x, drawEnd.x);
+        const y = Math.min(drawStart.y, drawEnd.y);
+        const w = Math.abs(drawEnd.x - drawStart.x);
+        const h = Math.abs(drawEnd.y - drawStart.y);
+        ctx.strokeRect(x, y, w, h);
+        ctx.setLineDash([]);
+      }
+    };
+    img.src = 'data:image/jpeg;base64,' + e.data;
+  };
+  wsVideo.onclose = () => setTimeout(connectVideo, 2000);
+  wsVideo.onerror = () => wsVideo.close();
+}
+connectVideo();
+
+// ── WebSocket: Alerts ──────────────────────────────────────────
+let wsAlerts = null;
+const alertEntries = [];
+function connectAlerts() {
+  wsAlerts = new WebSocket(`ws://${WS_HOST}/ws/alerts`);
+  wsAlerts.onmessage = (e) => {
+    const alert = JSON.parse(e.data);
+    addAlertEntry(alert);
+  };
+  wsAlerts.onclose = () => setTimeout(connectAlerts, 2000);
+  wsAlerts.onerror = () => wsAlerts.close();
+}
+connectAlerts();
+
+function addAlertEntry(alert) {
+  alertEntries.unshift(alert);
+  if (alertEntries.length > 50) alertEntries.pop();
+  renderAlerts();
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alertLog');
+  if (alertEntries.length === 0) {
+    container.innerHTML = '<div class="no-zones">No alerts yet.</div>';
+    return;
+  }
+  container.innerHTML = alertEntries.map(a => {
+    const time = new Date(a.timestamp * 1000).toLocaleTimeString();
+    return `<div class="alert-entry">
+      <span class="alert-time">${time}</span>
+      <span class="alert-badge ${a.severity}">${a.severity}</span>
+      <span class="alert-msg">${escapeHtml(a.message)}</span>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ── Poll Status ────────────────────────────────────────────────
+async function pollStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    // FPS
+    document.getElementById('fpsVal').textContent = (data.fps || 0).toFixed(1);
+    document.getElementById('inferenceVal').textContent = (data.inference_ms || 0).toFixed(0);
+    // Person
+    const dot = document.getElementById('personDot');
+    const label = document.getElementById('personLabel');
+    if (data.person_present) {
+      dot.classList.add('present');
+      label.textContent = 'Person present';
+    } else {
+      dot.classList.remove('present');
+      const secs = data.person_absent_seconds ? Math.round(data.person_absent_seconds) : 0;
+      label.textContent = secs > 0 ? `Absent ${secs}s` : 'No person';
+    }
+    // Zones
+    renderZoneStatus(data.zones || {});
+  } catch (e) {}
+}
+setInterval(pollStatus, 1000);
+
+function renderZoneStatus(zones) {
+  const container = document.getElementById('zonesContainer');
+  const zoneNames = Object.keys(zones);
+  if (zoneNames.length === 0 && currentZones.length === 0) {
+    container.innerHTML = '<div class="no-zones">No zones configured.<br>Use the controls below to add zones.</div>';
+    return;
+  }
+  // Merge: show configured zones with their status
+  const allNames = [...new Set([...zoneNames, ...currentZones.map(z => z.name)])];
+  container.innerHTML = allNames.map(name => {
+    const status = zones[name] || { state: 'off', unattended_seconds: null };
+    const stateLabel = status.state.replace(/_/g, ' ');
+    const unsec = status.unattended_seconds ? ` (${Math.round(status.unattended_seconds)}s)` : '';
+    return `<div class="zone-card ${status.state}">
+      <span>${name}</span>
+      <span class="state">${stateLabel}${unsec}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Zone Drawing ───────────────────────────────────────────────
+let currentZones = [];
+let drawing = false;
+let drawMode = false;
+let drawStart = null;
+let drawEnd = null;
+
+document.getElementById('btnDrawZone').addEventListener('click', () => {
+  const name = document.getElementById('zoneName').value.trim();
+  if (!name) { alert('Enter a zone name first'); return; }
+  drawMode = true;
+  document.getElementById('drawingHint').style.display = 'block';
+  canvas.style.cursor = 'crosshair';
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  if (!drawMode) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  drawStart = {
+    x: Math.round((e.clientX - rect.left) * scaleX),
+    y: Math.round((e.clientY - rect.top) * scaleY)
+  };
+  drawing = true;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  drawEnd = {
+    x: Math.round((e.clientX - rect.left) * scaleX),
+    y: Math.round((e.clientY - rect.top) * scaleY)
+  };
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (!drawing) return;
+  drawing = false;
+  drawMode = false;
+  document.getElementById('drawingHint').style.display = 'none';
+  canvas.style.cursor = 'default';
+
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  drawEnd = {
+    x: Math.round((e.clientX - rect.left) * scaleX),
+    y: Math.round((e.clientY - rect.top) * scaleY)
+  };
+
+  const name = document.getElementById('zoneName').value.trim() || `Zone ${currentZones.length + 1}`;
+  const x = Math.min(drawStart.x, drawEnd.x);
+  const y = Math.min(drawStart.y, drawEnd.y);
+  const w = Math.abs(drawEnd.x - drawStart.x);
+  const h = Math.abs(drawEnd.y - drawStart.y);
+
+  if (w > 10 && h > 10) {
+    currentZones.push({ name, x, y, w, h });
+    saveZones();
+    document.getElementById('zoneName').value = '';
+  }
+  drawStart = null;
+  drawEnd = null;
+});
+
+document.getElementById('btnClearZones').addEventListener('click', () => {
+  currentZones = [];
+  saveZones();
+});
+
+async function saveZones() {
+  try {
+    await fetch('/api/zones', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentZones)
+    });
+  } catch (e) {}
+}
+
+// Load existing zones on start
+(async () => {
+  try {
+    const res = await fetch('/api/zones');
+    currentZones = await res.json();
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
