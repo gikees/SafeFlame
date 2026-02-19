@@ -29,6 +29,8 @@ def _make_advisor(available=True, chat_return="Turn off the stove.", chat_side_e
     sys.modules["ollama"] = mock_ollama
     try:
         advisor = LLMAdvisor()
+        # Wait for background init thread to finish before restoring module
+        advisor._init_thread.join(timeout=2.0)
     finally:
         if old is not None:
             sys.modules["ollama"] = old

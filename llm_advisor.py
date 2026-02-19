@@ -30,10 +30,13 @@ class LLMAdvisor:
     def __init__(self):
         self._client = None
         self._available = False
-        self._init_client()
         # Cache for recent advice
         self._cache: dict[str, str] = {}
         self._cache_lock = threading.Lock()
+        # Init Ollama in background so startup is never blocked
+        self._init_thread = threading.Thread(target=self._init_client, daemon=True)
+        self._init_thread.start()
+        self._init_thread.join(timeout=config.LLM_TIMEOUT_SECONDS)
 
     def _init_client(self):
         """Try to connect to Ollama."""
