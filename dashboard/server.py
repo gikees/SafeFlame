@@ -93,6 +93,11 @@ class ZoneConfig(BaseModel):
 @app.post("/api/zones")
 async def set_zones(zones: list[ZoneConfig]):
     config.BURNER_ZONES = [z.model_dump() for z in zones]
+    sm = _shared.get("state_machine")
+    if sm and config.ASSUME_BURNERS_ACTIVE:
+        for z in zones:
+            if z.name not in sm.zone_active_overrides:
+                sm.zone_active_overrides[z.name] = True
     return {"status": "ok", "zones": config.BURNER_ZONES}
 
 
