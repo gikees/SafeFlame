@@ -36,10 +36,15 @@ def _make_advisor(available=True, chat_return="Turn off the stove.", chat_side_e
 
 
 class TestLLMAvailability:
-    def test_unavailable_returns_none(self):
+    def test_unavailable_returns_fallback(self):
         advisor = _make_advisor(available=False)
         assert advisor._available is False
         result = advisor.get_safety_advice("smoke")
+        assert result == config.FALLBACK_ADVICE["smoke"]
+
+    def test_unavailable_unknown_hazard_returns_none(self):
+        advisor = _make_advisor(available=False)
+        result = advisor.get_safety_advice("alien_invasion")
         assert result is None
 
     def test_available_when_client_works(self):
@@ -74,7 +79,7 @@ class TestCaching:
 
 
 class TestTimeout:
-    def test_slow_response_returns_none(self):
+    def test_slow_response_returns_fallback(self):
         def slow_chat(**kwargs):
             _time.sleep(5)
             return {"message": {"content": "Too slow."}}
@@ -82,14 +87,14 @@ class TestTimeout:
         advisor = _make_advisor(chat_side_effect=slow_chat)
         config.LLM_TIMEOUT_SECONDS = 0.1
         result = advisor.get_safety_advice("smoke")
-        assert result is None
+        assert result == config.FALLBACK_ADVICE["smoke"]
 
 
 class TestExceptionHandling:
-    def test_chat_exception_returns_none(self):
+    def test_chat_exception_returns_fallback(self):
         advisor = _make_advisor(chat_side_effect=RuntimeError("Model crashed"))
         result = advisor.get_safety_advice("smoke")
-        assert result is None
+        assert result == config.FALLBACK_ADVICE["smoke"]
 
     def test_hazard_prompts_formatting(self):
         prompt = HAZARD_PROMPTS["proximity"]

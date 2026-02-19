@@ -7,7 +7,9 @@ Real-time AI kitchen safety monitor. Camera feed → YOLOv8 + CV heuristics → 
 ## Workflow
 
 - **Develop locally** → push to GitHub → pull on remote GB10 → run there
-- **Remote machine**: `dell@100.89.249.36` (GPU inference, no camera, no Ollama yet)
+- **Remote machine**: `dell@100.89.249.36` (GPU inference, no camera, Ollama with llama3.1:8b)
+  - SSH via `sshpass -p <password> ssh dell@100.89.249.36` (password stored locally, not in repo)
+  - Working directory on remote: `~/SafeFlame` with venv at `.venv`
 - **Dashboard access**: `http://100.89.249.36:8000` from any machine on the network
 - For demo without a live camera, use `--video PATH` with a pre-recorded clip
 
@@ -28,7 +30,7 @@ main.py (SafeFlame class)
 ├── heuristics.py      — HeuristicDetector: flame (HSV), smoke (HSV + persistence), boilover (motion/edge), proximity
 ├── state_machine.py   — KitchenStateMachine: per-zone BurnerState enum, escalation timers, alert dedup via cooldowns
 ├── alerts.py          — AlertManager: pyttsx3 TTS in background threads, system fallback (say/espeak), log capped at 100
-├── llm_advisor.py     — LLMAdvisor: Ollama client, hazard prompt templates, thread-based timeout, dict cache (max 100)
+├── llm_advisor.py     — LLMAdvisor: Ollama client (llama3.1:8b), hazard prompts, timeout with FALLBACK_ADVICE, dict cache (max 100)
 └── dashboard/
     ├── server.py      — FastAPI app, REST API (/api/status, /api/alerts, /api/zones, /api/config), WebSocket (/ws, /ws/alerts)
     └── static/        — frontend HTML

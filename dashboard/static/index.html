@@ -216,6 +216,13 @@
 
   .alert-msg { flex: 1; }
 
+  .alert-advice {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--blue);
+    font-style: italic;
+  }
+
   /* Zone setup */
   .zone-setup {
     display: flex;
@@ -373,7 +380,9 @@ function addAlertEntry(alert) {
 
 function speakAlert(alert) {
   if (!('speechSynthesis' in window)) return;
-  const utter = new SpeechSynthesisUtterance(alert.message);
+  let text = alert.message;
+  if (alert.advice) text += '. ' + alert.advice;
+  const utter = new SpeechSynthesisUtterance(text);
   utter.rate = 1.1;
   if (alert.severity === 'critical') { utter.rate = 1.2; utter.volume = 1.0; }
   else if (alert.severity === 'warning') { utter.volume = 0.9; }
@@ -389,10 +398,11 @@ function renderAlerts() {
   }
   container.innerHTML = alertEntries.map(a => {
     const time = new Date(a.timestamp * 1000).toLocaleTimeString();
+    const adviceHtml = a.advice ? `<div class="alert-advice">${escapeHtml(a.advice)}</div>` : '';
     return `<div class="alert-entry">
       <span class="alert-time">${time}</span>
       <span class="alert-badge ${a.severity}">${a.severity}</span>
-      <span class="alert-msg">${escapeHtml(a.message)}</span>
+      <span class="alert-msg">${escapeHtml(a.message)}${adviceHtml}</span>
     </div>`;
   }).join('');
 }

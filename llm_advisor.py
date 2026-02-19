@@ -51,10 +51,10 @@ class LLMAdvisor:
     ) -> str | None:
         """Get a one-sentence safety tip for the given hazard.
 
-        Returns None if LLM is unavailable or times out.
+        Falls back to config.FALLBACK_ADVICE if LLM is unavailable or times out.
         """
         if not self._available:
-            return None
+            return config.FALLBACK_ADVICE.get(hazard_type)
 
         # Build the cache key
         cache_key = hazard_type
@@ -101,5 +101,7 @@ class LLMAdvisor:
                 if len(self._cache) > 100:
                     oldest = next(iter(self._cache))
                     del self._cache[oldest]
+            return advice
 
-        return advice
+        # LLM timed out or errored — use fallback
+        return config.FALLBACK_ADVICE.get(hazard_type)

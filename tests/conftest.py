@@ -56,8 +56,16 @@ def _reset_config():
         "cup", "bowl", "bottle", "fork", "spoon",
         "sink", "refrigerator", "cell phone",
     ]
-    config.LLM_TIMEOUT_SECONDS = 3.0
-    config.OLLAMA_MODEL = "llama3.2:3b"
+    config.LLM_TIMEOUT_SECONDS = 5.0
+    config.OLLAMA_MODEL = "llama3.1:8b"
+    config.FALLBACK_ADVICE = {
+        "unattended": "Turn off the burner or return to the kitchen immediately.",
+        "proximity": "Move flammable objects away from the active burner now.",
+        "boilover": "Reduce heat immediately and slide the pot off the burner.",
+        "smoke": "Check the source of smoke — turn off heat and ventilate the area.",
+        "flame": "If the flame is uncontrolled, turn off heat and cover with a lid.",
+        "grease_fire": "Never use water. Turn off heat and smother with a metal lid or baking soda.",
+    }
     yield
 
 

@@ -179,20 +179,20 @@ class SafeFlame:
                 # ── Handle Alerts ────────────────────────────────────
                 for alert in alerts:
                     advice = None
-                    if (
-                        self.llm_advisor
-                        and alert.severity in (Severity.WARNING, Severity.CRITICAL)
-                    ):
-                        context = {"zone": alert.burner_zone}
-                        # Add object info for proximity alerts
-                        if alert.type == "proximity":
-                            for pa in heuristic_results.get("proximity_alerts", []):
-                                if pa["zone"] == alert.burner_zone:
-                                    context["object"] = pa["object"]
-                                    break
-                        advice = self.llm_advisor.get_safety_advice(
-                            alert.type, context
-                        )
+                    if alert.severity in (Severity.WARNING, Severity.CRITICAL):
+                        if self.llm_advisor:
+                            context = {"zone": alert.burner_zone}
+                            # Add object info for proximity alerts
+                            if alert.type == "proximity":
+                                for pa in heuristic_results.get("proximity_alerts", []):
+                                    if pa["zone"] == alert.burner_zone:
+                                        context["object"] = pa["object"]
+                                        break
+                            advice = self.llm_advisor.get_safety_advice(
+                                alert.type, context
+                            )
+                        else:
+                            advice = config.FALLBACK_ADVICE.get(alert.type)
 
                     if self.alert_manager:
                         self.alert_manager.handle_alert(alert, advice)
