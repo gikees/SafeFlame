@@ -90,7 +90,7 @@ class KitchenStateMachine:
 
         for zone in burner_zones:
             name = zone["name"]
-            flame_on = zone_flame_status.get(name, False)
+            flame_on = config.ASSUME_BURNERS_ACTIVE or zone_flame_status.get(name, False)
 
             # Initialize zone state if new
             if name not in self.zone_states:

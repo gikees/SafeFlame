@@ -60,6 +60,8 @@ class SafeFlame:
             config.UNATTENDED_CRITICAL_SECONDS = 60
             config.ALERT_COOLDOWN_SECONDS = 10
             config.SMOKE_PERSISTENCE_SECONDS = 1.5
+            config.ASSUME_BURNERS_ACTIVE = True
+            config.SMOKE_DETECTION_ENABLED = False
 
         # Initialize components
         print("[SafeFlame] Initializing detector...")

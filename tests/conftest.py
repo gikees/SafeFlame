@@ -42,6 +42,8 @@ def _reset_config():
     config.SMOKE_MIN_CONTOUR_AREA = 2000
     config.SMOKE_PERSISTENCE_SECONDS = 3.0
     config.PROXIMITY_DISTANCE_PX = 150
+    config.ASSUME_BURNERS_ACTIVE = False
+    config.SMOKE_DETECTION_ENABLED = True
     config.FLAMMABLE_OBJECTS = ["bottle", "cup", "cell phone", "book", "paper"]
     config.TTS_RATE = 175
     config.TTS_VOLUME_INFO = 0.7

@@ -267,6 +267,22 @@ class TestHazardAlerts:
         assert len(alerts) == 1
         assert alerts[0].severity == Severity.CRITICAL
 
+    def test_assume_burners_active_escalates_without_flame(self):
+        import config
+        config.ASSUME_BURNERS_ACTIVE = True
+        sm = KitchenStateMachine()
+        zone = [{"name": "B1", "x": 0, "y": 0, "w": 100, "h": 100}]
+        h_no_flame = {"zone_flame_status": {"B1": False}, "proximity_alerts": [], "boilover_zones": [], "smoke_regions": [], "flames": []}
+        person = [{"class": "person", "confidence": 0.9, "bbox": (0, 0, 1, 1), "label": "p"}]
+        # Person present → attended
+        with patch("state_machine.time.time", return_value=1000.0):
+            sm.update(person, h_no_flame, zone)
+        assert sm.zone_states["B1"] == BurnerState.ACTIVE_ATTENDED
+        # Person leaves → should still escalate despite no flame
+        with patch("state_machine.time.time", return_value=1010.0):
+            sm.update([], h_no_flame, zone)
+        assert sm.zone_states["B1"] == BurnerState.ACTIVE_UNATTENDED
+
     def test_flame_with_no_zones_warns(self):
         sm = KitchenStateMachine()
         h = {

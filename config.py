@@ -31,6 +31,7 @@ SMOKE_H_MIN, SMOKE_H_MAX = 0, 30
 SMOKE_S_MIN, SMOKE_S_MAX = 0, 60
 SMOKE_V_MIN, SMOKE_V_MAX = 150, 230
 SMOKE_MIN_CONTOUR_AREA = 2000
+SMOKE_DETECTION_ENABLED = True
 SMOKE_PERSISTENCE_SECONDS = 3.0  # must persist this long to count as smoke (not steam)
 
 # ── Boil-Over Detection ──────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ FLAMMABLE_OBJECTS = ["bottle", "cup", "cell phone", "book", "paper"]
 # List of dicts: {"name": str, "x": int, "y": int, "w": int, "h": int}
 # Can be configured at runtime via the dashboard API.
 BURNER_ZONES = []
+ASSUME_BURNERS_ACTIVE = False  # Skip flame check — treat all zones as active
 
 # ── State Machine Timers (seconds) ───────────────────────────────────────────
 UNATTENDED_INFO_SECONDS = 60

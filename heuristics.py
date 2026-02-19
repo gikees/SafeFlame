@@ -36,7 +36,7 @@ class HeuristicDetector:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         flames = self._detect_flames(hsv)
-        smoke_regions = self._detect_smoke(hsv, frame)
+        smoke_regions = self._detect_smoke(hsv, frame) if config.SMOKE_DETECTION_ENABLED else []
         boilover_zones = self._detect_boilover(gray, burner_zones)
         zone_flame_status = self._check_zones_for_flame(flames, burner_zones)
         proximity_alerts = self._check_proximity(detections, burner_zones)
